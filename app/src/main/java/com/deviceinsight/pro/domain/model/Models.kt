@@ -93,6 +93,22 @@ data class SecurityReport(
     val findings: List<SecurityFinding>
 )
 
+/**
+ * A captured social/messaging notification. Sourced from the OS notification stream (with the
+ * user's consent) — it is a notification preview, not a copy of the app's private chat database.
+ */
+data class SocialMessage(
+    val id: Long,
+    val platform: SocialPlatform,
+    val packageName: String,
+    val appName: String,
+    val sender: String,
+    val conversation: String?,
+    val preview: String,
+    val isGroup: Boolean,
+    val timestamp: Long
+)
+
 /** A single historical battery reading. */
 data class BatterySample(
     val timestamp: Long,

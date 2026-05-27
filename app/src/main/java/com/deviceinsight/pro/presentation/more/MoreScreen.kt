@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.Notifications
@@ -35,6 +36,7 @@ private data class MoreEntry(val route: String, val title: String, val subtitle:
 @Composable
 fun MoreScreen(onNavigate: (String) -> Unit) {
     val entries = listOf(
+        MoreEntry(Dest.MESSAGES, "Messages", "Social & messaging app monitoring", Icons.AutoMirrored.Filled.Message),
         MoreEntry(Dest.NOTIFICATIONS, "Notifications", "Search, analytics and spam detection", Icons.Filled.Notifications),
         MoreEntry(Dest.ANALYTICS, "Analytics", "Screen time, network, battery & performance", Icons.Filled.Insights),
         MoreEntry(Dest.REPORTS, "Reports & Export", "Weekly summaries and CSV export", Icons.Filled.Assessment),

@@ -68,6 +68,27 @@ data class NetworkUsageEntity(
     val timestamp: Long
 )
 
+/** A captured social/messaging notification preview. */
+@Entity(
+    tableName = "social_messages",
+    indices = [
+        Index("timestamp"),
+        Index("platform"),
+        Index(value = ["packageName", "sender", "timestamp"], unique = true)
+    ]
+)
+data class SocialMessageEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val platform: String,
+    val packageName: String,
+    val appName: String,
+    val sender: String,
+    val conversation: String?,
+    val preview: String,
+    val isGroup: Boolean,
+    val timestamp: Long
+)
+
 /** A persisted security finding from the most recent scan. */
 @Entity(tableName = "security_events", indices = [Index("timestamp")])
 data class SecurityEventEntity(

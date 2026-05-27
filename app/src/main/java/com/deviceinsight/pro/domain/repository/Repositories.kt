@@ -42,6 +42,25 @@ interface NotificationRepository {
     fun hasNotificationAccess(): Boolean
 }
 
+interface SocialMessageRepository {
+    fun observeRecent(): Flow<List<com.deviceinsight.pro.domain.model.SocialMessage>>
+    fun observeForPlatform(platform: com.deviceinsight.pro.domain.model.SocialPlatform): Flow<List<com.deviceinsight.pro.domain.model.SocialMessage>>
+    fun search(query: String): Flow<List<com.deviceinsight.pro.domain.model.SocialMessage>>
+    fun observeTodayCount(): Flow<Int>
+    fun observePlatformCounts(): Flow<List<Pair<com.deviceinsight.pro.domain.model.SocialPlatform, Int>>>
+    fun hasNotificationAccess(): Boolean
+}
+
+/**
+ * Optional, opt-in synchronization of on-device analytics to a backend so an authorized admin
+ * can review them across devices. The default binding is a no-op; a Firestore implementation can
+ * be dropped in (see docs/firebase). Sync only runs when the device user has enabled it.
+ */
+interface CloudSyncRepository {
+    fun isCloudEnabled(): Boolean
+    suspend fun syncNow(): Result<Unit>
+}
+
 interface DeviceEventRepository {
     fun observeRecent(): Flow<List<DeviceEvent>>
     fun observeToday(): Flow<List<DeviceEvent>>

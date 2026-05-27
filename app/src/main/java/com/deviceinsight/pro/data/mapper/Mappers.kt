@@ -37,6 +37,20 @@ fun DeviceEventEntity.toDomain() = DeviceEvent(
     timestamp = timestamp
 )
 
+fun com.deviceinsight.pro.database.entity.SocialMessageEntity.toDomain() =
+    com.deviceinsight.pro.domain.model.SocialMessage(
+        id = id,
+        platform = runCatching { com.deviceinsight.pro.domain.model.SocialPlatform.valueOf(platform) }
+            .getOrDefault(com.deviceinsight.pro.domain.model.SocialPlatform.OTHER),
+        packageName = packageName,
+        appName = appName,
+        sender = sender,
+        conversation = conversation,
+        preview = preview,
+        isGroup = isGroup,
+        timestamp = timestamp
+    )
+
 fun BatteryStatEntity.toSample() = BatterySample(
     timestamp = timestamp,
     level = level,

@@ -11,6 +11,7 @@ import com.deviceinsight.pro.database.entity.DeviceEventEntity
 import com.deviceinsight.pro.database.entity.NetworkUsageEntity
 import com.deviceinsight.pro.database.entity.NotificationEntity
 import com.deviceinsight.pro.database.entity.SecurityEventEntity
+import com.deviceinsight.pro.database.entity.SocialMessageEntity
 import com.deviceinsight.pro.database.entity.UserSettingsEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -64,6 +65,36 @@ interface NotificationDao {
 }
 
 data class AppCount(val appName: String, val cnt: Int)
+
+@Dao
+interface SocialMessageDao {
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insert(row: SocialMessageEntity)
+
+    @Query("SELECT * FROM social_messages ORDER BY timestamp DESC LIMIT :limit")
+    fun observeRecent(limit: Int = 500): Flow<List<SocialMessageEntity>>
+
+    @Query("SELECT * FROM social_messages WHERE platform = :platform ORDER BY timestamp DESC LIMIT :limit")
+    fun observeForPlatform(platform: String, limit: Int = 500): Flow<List<SocialMessageEntity>>
+
+    @Query(
+        "SELECT * FROM social_messages WHERE sender LIKE '%' || :q || '%' " +
+            "OR preview LIKE '%' || :q || '%' OR conversation LIKE '%' || :q || '%' " +
+            "ORDER BY timestamp DESC LIMIT :limit"
+    )
+    fun search(q: String, limit: Int = 500): Flow<List<SocialMessageEntity>>
+
+    @Query("SELECT platform AS platform, COUNT(*) AS cnt FROM social_messages WHERE timestamp >= :since GROUP BY platform ORDER BY cnt DESC")
+    fun observePlatformCounts(since: Long): Flow<List<PlatformCount>>
+
+    @Query("SELECT COUNT(*) FROM social_messages WHERE timestamp >= :since")
+    fun observeCountSince(since: Long): Flow<Int>
+
+    @Query("DELETE FROM social_messages WHERE timestamp < :before")
+    suspend fun pruneBefore(before: Long)
+}
+
+data class PlatformCount(val platform: String, val cnt: Int)
 
 @Dao
 interface DeviceEventDao {

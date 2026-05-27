@@ -19,6 +19,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.deviceinsight.pro.presentation.analytics.AnalyticsScreen
 import com.deviceinsight.pro.presentation.dashboard.DashboardScreen
+import com.deviceinsight.pro.presentation.messages.MessagesScreen
 import com.deviceinsight.pro.presentation.more.MoreScreen
 import com.deviceinsight.pro.presentation.notifications.NotificationsScreen
 import com.deviceinsight.pro.presentation.onboarding.PermissionsScreen
@@ -70,6 +71,7 @@ fun DeviceInsightRoot() {
                 MoreScreen(onNavigate = { route -> navController.navigate(route) })
             }
 
+            composable(Dest.MESSAGES) { MessagesScreen(onBack = { navController.popBackStack() }) }
             composable(Dest.NOTIFICATIONS) { NotificationsScreen(onBack = { navController.popBackStack() }) }
             composable(Dest.ANALYTICS) { AnalyticsScreen(onBack = { navController.popBackStack() }) }
             composable(Dest.REPORTS) { ReportsScreen(onBack = { navController.popBackStack() }) }

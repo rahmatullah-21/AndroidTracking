@@ -8,6 +8,7 @@ import com.deviceinsight.pro.database.dao.AppUsageDao
 import com.deviceinsight.pro.database.dao.BatteryStatDao
 import com.deviceinsight.pro.database.dao.DeviceEventDao
 import com.deviceinsight.pro.database.dao.NotificationDao
+import com.deviceinsight.pro.database.dao.SocialMessageDao
 import com.deviceinsight.pro.domain.repository.SecurityRepository
 import com.deviceinsight.pro.utils.Constants
 import com.deviceinsight.pro.utils.TimeWindows
@@ -23,7 +24,8 @@ class DailyMaintenanceWorker @AssistedInject constructor(
     private val appUsageDao: AppUsageDao,
     private val notificationDao: NotificationDao,
     private val deviceEventDao: DeviceEventDao,
-    private val batteryStatDao: BatteryStatDao
+    private val batteryStatDao: BatteryStatDao,
+    private val socialMessageDao: SocialMessageDao
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result {
@@ -36,6 +38,7 @@ class DailyMaintenanceWorker @AssistedInject constructor(
             notificationDao.pruneBefore(cutoffMs)
             deviceEventDao.pruneBefore(cutoffMs)
             batteryStatDao.pruneBefore(cutoffMs)
+            socialMessageDao.pruneBefore(cutoffMs)
         }
         return Result.success()
     }

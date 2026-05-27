@@ -18,6 +18,7 @@ object Dest {
     const val MORE = "more"
 
     // Secondary (pushed) destinations
+    const val MESSAGES = "messages"
     const val NOTIFICATIONS = "notifications"
     const val ANALYTICS = "analytics"
     const val REPORTS = "reports"

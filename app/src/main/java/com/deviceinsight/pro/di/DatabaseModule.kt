@@ -9,6 +9,7 @@ import com.deviceinsight.pro.database.dao.DeviceEventDao
 import com.deviceinsight.pro.database.dao.NetworkUsageDao
 import com.deviceinsight.pro.database.dao.NotificationDao
 import com.deviceinsight.pro.database.dao.SecurityEventDao
+import com.deviceinsight.pro.database.dao.SocialMessageDao
 import com.deviceinsight.pro.database.dao.UserSettingsDao
 import dagger.Module
 import dagger.Provides
@@ -34,5 +35,6 @@ object DatabaseModule {
     @Provides fun batteryStatDao(db: AppDatabase): BatteryStatDao = db.batteryStatDao()
     @Provides fun networkUsageDao(db: AppDatabase): NetworkUsageDao = db.networkUsageDao()
     @Provides fun securityEventDao(db: AppDatabase): SecurityEventDao = db.securityEventDao()
+    @Provides fun socialMessageDao(db: AppDatabase): SocialMessageDao = db.socialMessageDao()
     @Provides fun userSettingsDao(db: AppDatabase): UserSettingsDao = db.userSettingsDao()
 }

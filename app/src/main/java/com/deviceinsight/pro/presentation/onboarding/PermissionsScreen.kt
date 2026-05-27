@@ -78,7 +78,9 @@ fun PermissionsScreen(onContinue: () -> Unit) {
 
         PermissionRow(
             title = "Notification Access (optional)",
-            rationale = "Enables notification analytics. Only titles and short previews are stored, on-device.",
+            rationale = "Enables notification analytics and social/messaging monitoring. Only " +
+                "titles, sender names and short previews are stored, on-device. Use only on devices " +
+                "you own or are explicitly authorized to monitor (e.g. your child's device).",
             granted = hasNotifAccess,
             actionLabel = "Open Notification Access settings",
             onAction = { context.startActivity(PermissionUtils.notificationAccessIntent()) }

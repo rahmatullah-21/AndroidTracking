@@ -8,6 +8,7 @@ import com.deviceinsight.pro.database.dao.DeviceEventDao
 import com.deviceinsight.pro.database.dao.NetworkUsageDao
 import com.deviceinsight.pro.database.dao.NotificationDao
 import com.deviceinsight.pro.database.dao.SecurityEventDao
+import com.deviceinsight.pro.database.dao.SocialMessageDao
 import com.deviceinsight.pro.database.dao.UserSettingsDao
 import com.deviceinsight.pro.database.entity.AppUsageEntity
 import com.deviceinsight.pro.database.entity.BatteryStatEntity
@@ -15,6 +16,7 @@ import com.deviceinsight.pro.database.entity.DeviceEventEntity
 import com.deviceinsight.pro.database.entity.NetworkUsageEntity
 import com.deviceinsight.pro.database.entity.NotificationEntity
 import com.deviceinsight.pro.database.entity.SecurityEventEntity
+import com.deviceinsight.pro.database.entity.SocialMessageEntity
 import com.deviceinsight.pro.database.entity.UserSettingsEntity
 
 @Database(
@@ -25,9 +27,10 @@ import com.deviceinsight.pro.database.entity.UserSettingsEntity
         BatteryStatEntity::class,
         NetworkUsageEntity::class,
         SecurityEventEntity::class,
+        SocialMessageEntity::class,
         UserSettingsEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -37,6 +40,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun batteryStatDao(): BatteryStatDao
     abstract fun networkUsageDao(): NetworkUsageDao
     abstract fun securityEventDao(): SecurityEventDao
+    abstract fun socialMessageDao(): SocialMessageDao
     abstract fun userSettingsDao(): UserSettingsDao
 
     companion object {

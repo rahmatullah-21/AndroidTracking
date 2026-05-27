@@ -14,6 +14,11 @@ another adult without their knowledge and consent.
 - **Notifications** (only if you enable Notification Access): the posting app, the title, a **short
   text preview**, a category, and the timestamp. Full message bodies, images and attachments are
   **not** stored.
+- **Social / messaging previews** (same Notification Access): for recognized chat apps (WhatsApp,
+  Instagram, Messenger, Telegram, Snapchat, Signal, etc.) the app records the **sender name and the
+  message preview that appears in the notification**, plus the platform and timestamp. It reads only
+  what the operating system shows in notifications — it does **not** access the messaging app's
+  private message database, and it does not log keystrokes or scrape the screen.
 - **Device events**: screen on/off, unlock, charging, Wi‑Fi/Bluetooth/headphone state, battery-low,
   and reboot — for the activity timeline.
 - **Network usage**: device-level Wi‑Fi and mobile data totals.
