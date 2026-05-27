@@ -11,6 +11,7 @@ import com.deviceinsight.pro.domain.repository.SocialMessageRepository
 import com.deviceinsight.pro.domain.repository.UsageRepository
 import com.deviceinsight.pro.utils.CloudConfig
 import com.deviceinsight.pro.utils.DeviceIdentity
+import com.deviceinsight.pro.utils.TimeWindows
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.SetOptions
@@ -78,6 +79,32 @@ class FirebaseCloudSyncRepository @Inject constructor(
                 ),
                 SetOptions.merge()
             ).await()
+
+            // Per-day usage totals (last 7 days) + today's top apps.
+            val today = TimeWindows.todayEpochDay()
+            val daily = usageRepository.observeDailyForeground(7).first()
+            val startDay = today - (daily.size - 1).coerceAtLeast(0)
+            val todayApps = usageRepository.observeUsage(1).first().take(15)
+            daily.forEachIndexed { i, totalMs ->
+                val epochDay = startDay + i
+                val data = mutableMapOf<String, Any>(
+                    "epochDay" to epochDay,
+                    "totalForegroundMs" to totalMs,
+                    "updatedAt" to FieldValue.serverTimestamp()
+                )
+                if (epochDay == today) {
+                    data["apps"] = todayApps.map {
+                        mapOf(
+                            "packageName" to it.packageName,
+                            "appName" to it.appName,
+                            "totalForegroundMs" to it.totalForegroundMs,
+                            "launchCount" to it.launchCount,
+                            "lastTimeUsed" to it.lastTimeUsed
+                        )
+                    }
+                }
+                deviceRef.collection("usage").document(epochDay.toString()).set(data)
+            }
 
             messageRepository.observeRecent().first().take(100).forEach { m ->
                 deviceRef.collection("messages").document(m.id.toString()).set(
