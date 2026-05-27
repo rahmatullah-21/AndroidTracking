@@ -1,5 +1,6 @@
 package com.deviceinsight.pro.presentation.settings
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,6 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -36,6 +38,7 @@ import com.deviceinsight.pro.presentation.components.SectionHeader
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
+    onOpenCloudSync: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
@@ -115,6 +118,21 @@ fun SettingsScreen(
                         checked = settings.biometricLockEnabled,
                         onCheckedChange = viewModel::setBiometricLock
                     )
+                    Row(
+                        Modifier.fillMaxWidth().clickable(onClick = onOpenCloudSync).padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                            Text("Cloud sync (link device)", fontWeight = FontWeight.Medium)
+                            Text(
+                                "Link this device to the web admin panel with a pairing code",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+                    }
                 }
             }
 

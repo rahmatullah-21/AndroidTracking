@@ -4,8 +4,12 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
-    // Enable after adding google-services.json (see README):
-    // alias(libs.plugins.google.services)
+}
+
+// Auto-apply the google-services plugin only when a config is present, so the project builds
+// offline out of the box and turns on Firebase cloud sync the moment you add google-services.json.
+if (project.file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
 }
 
 android {
@@ -59,6 +63,7 @@ android {
 dependencies {
     // Core / lifecycle
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
@@ -97,11 +102,9 @@ dependencies {
     // Java 8+ API desugaring
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
-    // Firebase — uncomment after enabling the google-services plugin (see README)
-    // implementation(platform(libs.firebase.bom))
-    // implementation(libs.firebase.auth)
-    // implementation(libs.firebase.firestore)
-    // implementation(libs.firebase.messaging)
-    // implementation(libs.firebase.analytics)
-    // implementation(libs.firebase.crashlytics)
+    // Firebase cloud sync (optional at runtime — initializes only when google-services.json is added)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
+    implementation(libs.kotlinx.coroutines.play.services)
 }

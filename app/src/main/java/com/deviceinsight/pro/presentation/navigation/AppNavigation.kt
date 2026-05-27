@@ -18,6 +18,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.deviceinsight.pro.presentation.analytics.AnalyticsScreen
+import com.deviceinsight.pro.presentation.cloud.CloudSyncScreen
 import com.deviceinsight.pro.presentation.dashboard.DashboardScreen
 import com.deviceinsight.pro.presentation.messages.MessagesScreen
 import com.deviceinsight.pro.presentation.more.MoreScreen
@@ -35,7 +36,9 @@ fun DeviceInsightRoot() {
     val navController = rememberNavController()
     val context = LocalContext.current
     val startRoute = remember {
-        if (PermissionUtils.hasUsageAccess(context)) Dest.DASHBOARD else Dest.ONBOARDING
+        val ready = PermissionUtils.hasUsageAccess(context) &&
+            PermissionUtils.hasNotificationAccess(context)
+        if (ready) Dest.DASHBOARD else Dest.ONBOARDING
     }
 
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -75,7 +78,13 @@ fun DeviceInsightRoot() {
             composable(Dest.NOTIFICATIONS) { NotificationsScreen(onBack = { navController.popBackStack() }) }
             composable(Dest.ANALYTICS) { AnalyticsScreen(onBack = { navController.popBackStack() }) }
             composable(Dest.REPORTS) { ReportsScreen(onBack = { navController.popBackStack() }) }
-            composable(Dest.SETTINGS) { SettingsScreen(onBack = { navController.popBackStack() }) }
+            composable(Dest.SETTINGS) {
+                SettingsScreen(
+                    onBack = { navController.popBackStack() },
+                    onOpenCloudSync = { navController.navigate(Dest.CLOUD_SYNC) }
+                )
+            }
+            composable(Dest.CLOUD_SYNC) { CloudSyncScreen(onBack = { navController.popBackStack() }) }
         }
     }
 }

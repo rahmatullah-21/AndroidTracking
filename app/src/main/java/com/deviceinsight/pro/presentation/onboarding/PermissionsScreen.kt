@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -53,6 +54,13 @@ fun PermissionsScreen(onContinue: () -> Unit) {
     } else null
     val postGranted = postNotif?.status?.isGranted ?: true
 
+    // Ask for the runtime notification permission automatically on first launch.
+    LaunchedEffect(Unit) {
+        if (postNotif != null && !postNotif.status.isGranted) postNotif.launchPermissionRequest()
+    }
+
+    val canContinue = hasUsage && hasNotifAccess
+
     Column(
         Modifier
             .fillMaxSize()
@@ -77,7 +85,7 @@ fun PermissionsScreen(onContinue: () -> Unit) {
         )
 
         PermissionRow(
-            title = "Notification Access (optional)",
+            title = "Notification Access (required)",
             rationale = "Enables notification analytics and social/messaging monitoring. Only " +
                 "titles, sender names and short previews are stored, on-device. Use only on devices " +
                 "you own or are explicitly authorized to monitor (e.g. your child's device).",
@@ -94,12 +102,21 @@ fun PermissionsScreen(onContinue: () -> Unit) {
             onAction = { postNotif?.launchPermissionRequest() }
         )
 
+        if (!canContinue) {
+            Text(
+                "Grant the required access above to continue. The app stays on this screen until " +
+                    "Usage Access and Notification Access are enabled.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+
         Button(
             onClick = onContinue,
-            enabled = hasUsage,
+            enabled = canContinue,
             modifier = Modifier.align(Alignment.End).padding(top = 8.dp)
         ) {
-            Text(if (hasUsage) "Continue" else "Grant Usage Access to continue")
+            Text(if (canContinue) "Continue to dashboard" else "Complete required permissions")
         }
     }
 }

@@ -23,6 +23,7 @@ object Dest {
     const val ANALYTICS = "analytics"
     const val REPORTS = "reports"
     const val SETTINGS = "settings"
+    const val CLOUD_SYNC = "cloud_sync"
 }
 
 data class BottomNavItem(

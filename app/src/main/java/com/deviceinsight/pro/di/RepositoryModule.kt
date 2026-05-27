@@ -3,7 +3,7 @@ package com.deviceinsight.pro.di
 import com.deviceinsight.pro.data.repository.DeviceEventRepositoryImpl
 import com.deviceinsight.pro.data.repository.DeviceMetricsRepositoryImpl
 import com.deviceinsight.pro.data.repository.NetworkRepositoryImpl
-import com.deviceinsight.pro.data.repository.NoOpCloudSyncRepository
+import com.deviceinsight.pro.data.repository.FirebaseCloudSyncRepository
 import com.deviceinsight.pro.data.repository.NotificationRepositoryImpl
 import com.deviceinsight.pro.data.repository.SecurityRepositoryImpl
 import com.deviceinsight.pro.data.repository.SettingsRepositoryImpl
@@ -52,7 +52,7 @@ abstract class RepositoryModule {
     @Binds @Singleton
     abstract fun bindSocialMessageRepository(impl: SocialMessageRepositoryImpl): SocialMessageRepository
 
-    // Default no-op cloud sync. Swap for a Firestore implementation to enable the admin panel.
+    // Firestore-backed cloud sync; no-ops until google-services.json is added + the device is linked.
     @Binds @Singleton
-    abstract fun bindCloudSyncRepository(impl: NoOpCloudSyncRepository): CloudSyncRepository
+    abstract fun bindCloudSyncRepository(impl: FirebaseCloudSyncRepository): CloudSyncRepository
 }

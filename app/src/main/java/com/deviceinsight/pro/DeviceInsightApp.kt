@@ -9,6 +9,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.deviceinsight.pro.utils.Constants
+import com.deviceinsight.pro.workers.CloudSyncWorker
 import com.deviceinsight.pro.workers.DailyMaintenanceWorker
 import com.deviceinsight.pro.workers.UsageSyncWorker
 import dagger.hilt.android.HiltAndroidApp
@@ -64,6 +65,14 @@ class DeviceInsightApp : Application(), Configuration.Provider {
             Constants.DAILY_REPORT_WORK,
             ExistingPeriodicWorkPolicy.KEEP,
             maintenance
+        )
+
+        // Cloud sync (no-op unless the device is linked + Firebase configured).
+        val cloudSync = PeriodicWorkRequestBuilder<CloudSyncWorker>(2, TimeUnit.HOURS).build()
+        wm.enqueueUniquePeriodicWork(
+            Constants.CLOUD_SYNC_WORK,
+            ExistingPeriodicWorkPolicy.KEEP,
+            cloudSync
         )
     }
 }

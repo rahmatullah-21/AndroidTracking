@@ -7,6 +7,7 @@ object Constants {
 
     const val USAGE_SYNC_WORK = "usage_sync_work"
     const val DAILY_REPORT_WORK = "daily_report_work"
+    const val CLOUD_SYNC_WORK = "cloud_sync_work"
 
     /** How long monitoring data is retained on-device before pruning. */
     const val DATA_RETENTION_DAYS = 90L
