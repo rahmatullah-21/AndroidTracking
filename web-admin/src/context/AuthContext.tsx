@@ -28,11 +28,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (USE_MOCK) return
-    const unsub = onAuthStateChanged(getAuthInstance(), (fbUser) => {
-      setUser(fbUser ? { uid: fbUser.uid, email: fbUser.email } : null)
+    try {
+      const unsub = onAuthStateChanged(getAuthInstance(), (fbUser) => {
+        setUser(fbUser ? { uid: fbUser.uid, email: fbUser.email } : null)
+        setLoading(false)
+      })
+      return unsub
+    } catch (err) {
+      // Misconfigured Firebase — surface on the login screen instead of crashing.
+      console.error('Firebase auth init failed:', err)
       setLoading(false)
-    })
-    return unsub
+    }
   }, [])
 
   const value = useMemo<AuthContextValue>(() => ({
