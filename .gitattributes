@@ -1,0 +1,7 @@
+# Keep the Gradle wrapper usable on every platform.
+gradlew        text eol=lf
+*.bat          text eol=crlf
+*.jar          binary
+*.apk          binary
+*.keystore     binary
+*.jks          binary

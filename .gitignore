@@ -64,5 +64,8 @@ obj/
 # Kotlin
 .kotlin/
 
+# Local build log
+build-output.txt
+
 # Claude Code local machine settings
 .claude/settings.local.json
