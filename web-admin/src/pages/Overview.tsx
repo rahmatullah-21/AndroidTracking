@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import {
   Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts'
+import PairingModal from '../components/PairingModal'
 import Spinner from '../components/Spinner'
 import StatCard from '../components/StatCard'
 import { useAuth } from '../context/AuthContext'
@@ -13,6 +14,7 @@ import type { Device } from '../lib/types'
 export default function Overview() {
   const { user } = useAuth()
   const [devices, setDevices] = useState<Device[] | null>(null)
+  const [pairing, setPairing] = useState(false)
 
   useEffect(() => {
     listDevices(user!.uid).then(setDevices).catch(() => setDevices([]))
@@ -32,7 +34,15 @@ export default function Overview() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-slate-900">Overview</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-slate-900">Overview</h1>
+        <button
+          onClick={() => setPairing(true)}
+          className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark"
+        >
+          + Add device
+        </button>
+      </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <StatCard title="Devices" value={String(devices.length)} />
@@ -77,6 +87,8 @@ export default function Overview() {
           ))}
         </ul>
       </div>
+
+      {pairing && <PairingModal ownerUid={user!.uid} onClose={() => setPairing(false)} />}
     </div>
   )
 }

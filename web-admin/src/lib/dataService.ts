@@ -1,11 +1,21 @@
 import {
-  collection, doc, getDoc, getDocs, limit, orderBy, query, where,
+  collection, deleteDoc, doc, getDoc, getDocs, limit, orderBy, query, where,
 } from 'firebase/firestore'
 import { USE_MOCK, getDb } from './firebase'
 import * as mock from './mockData'
 import type {
   Device, DeviceEvent, SecurityReport, SocialMessage, UsageDay,
 } from './types'
+
+/**
+ * Unlinks a device the owner controls (removes the top-level document). Its subcollections then
+ * become unreadable because the rules check the now-missing parent doc. For full storage cleanup,
+ * run a recursive delete via the Firebase CLI / a scheduled job — omitted to stay Functions-free.
+ */
+export async function deleteDevice(deviceId: string): Promise<void> {
+  if (USE_MOCK) return
+  await deleteDoc(doc(getDb(), 'devices', deviceId))
+}
 
 export async function listDevices(ownerUid: string): Promise<Device[]> {
   if (USE_MOCK) return mock.mockDevices

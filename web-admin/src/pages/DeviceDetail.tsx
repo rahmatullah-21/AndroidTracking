@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   Bar, BarChart, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts'
@@ -9,7 +9,7 @@ import {
   CHART_PALETTE, clockTime, formatDuration, relativeTime, scoreColor, severityColor,
 } from '../lib/format'
 import {
-  getDevice, getEvents, getMessages, getSecurity, getUsageDays,
+  deleteDevice, getDevice, getEvents, getMessages, getSecurity, getUsageDays,
 } from '../lib/dataService'
 import type {
   Device, DeviceEvent, SecurityReport, SocialMessage, UsageDay,
@@ -17,12 +17,26 @@ import type {
 
 export default function DeviceDetail() {
   const { deviceId = '' } = useParams()
+  const navigate = useNavigate()
   const [device, setDevice] = useState<Device | null>(null)
   const [usage, setUsage] = useState<UsageDay[]>([])
   const [messages, setMessages] = useState<SocialMessage[]>([])
   const [events, setEvents] = useState<DeviceEvent[]>([])
   const [security, setSecurity] = useState<SecurityReport | null>(null)
   const [loading, setLoading] = useState(true)
+  const [unlinking, setUnlinking] = useState(false)
+
+  async function onUnlink() {
+    if (!window.confirm('Unlink this device? It will stop appearing here until it is paired again.')) return
+    setUnlinking(true)
+    try {
+      await deleteDevice(deviceId)
+      navigate('/devices')
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Failed to unlink device')
+      setUnlinking(false)
+    }
+  }
 
   useEffect(() => {
     let active = true
@@ -59,13 +73,22 @@ export default function DeviceDetail() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <Link to="/devices" className="text-sm text-brand hover:underline">← All devices</Link>
-        <h1 className="mt-1 text-2xl font-bold text-slate-900">{device.label}</h1>
-        <p className="text-sm text-slate-400">
-          {device.manufacturer} {device.model} • last seen{' '}
-          {device.lastSeen ? relativeTime(device.lastSeen) : 'unknown'}
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <Link to="/devices" className="text-sm text-brand hover:underline">← All devices</Link>
+          <h1 className="mt-1 text-2xl font-bold text-slate-900">{device.label}</h1>
+          <p className="text-sm text-slate-400">
+            {device.manufacturer} {device.model} • last seen{' '}
+            {device.lastSeen ? relativeTime(device.lastSeen) : 'unknown'}
+          </p>
+        </div>
+        <button
+          onClick={onUnlink}
+          disabled={unlinking}
+          className="rounded-lg border border-red-300 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-60"
+        >
+          {unlinking ? 'Unlinking…' : 'Unlink device'}
+        </button>
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
