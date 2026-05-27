@@ -6,10 +6,15 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
-// Auto-apply the google-services plugin only when a config is present, so the project builds
-// offline out of the box and turns on Firebase cloud sync the moment you add google-services.json.
-if (project.file("google-services.json").exists()) {
-    apply(plugin = "com.google.gms.google-services")
+// Auto-apply the google-services plugin only when a VALID app config is present (a real
+// google-services.json contains a "project_info" object). This keeps the build green offline and
+// ignores wrong files (e.g. a service-account key), turning on Firebase the moment the real
+// google-services.json is added.
+run {
+    val gs = project.file("google-services.json")
+    if (gs.exists() && gs.readText().contains("\"project_info\"")) {
+        apply(plugin = "com.google.gms.google-services")
+    }
 }
 
 android {
