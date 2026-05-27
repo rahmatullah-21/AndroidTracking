@@ -118,13 +118,20 @@ See [docs/PRIVACY.md](docs/PRIVACY.md) for a privacy-policy template you can ada
 
 1. Create a Firebase project and add an Android app with package `com.deviceinsight.pro`.
 2. Download `google-services.json` into `app/`.
-3. Uncomment the `google-services` plugin in the root and app `build.gradle.kts`, and the Firebase
-   dependencies block in `app/build.gradle.kts` (both are pre-wired in `libs.versions.toml`).
-4. Add `CloudSyncRepository` implementations for Auth, Firestore (reports/settings mirror),
-   Messaging (remote config / alerts), Analytics and Crashlytics. The on-device repositories
-   already expose Flows that map cleanly to Firestore documents.
+3. Enable **Email/Password** auth (admins) and **Anonymous** auth (devices); create Firestore and
+   deploy the rules in [`firestore.rules`](firestore.rules) (`firebase deploy --only firestore:rules`).
+4. Uncomment the `google-services` plugin + Firebase deps (pre-wired in `gradle/libs.versions.toml`),
+   then follow [docs/firebase/README.md](docs/firebase/README.md) to drop in the cloud-sync module
+   and the **pairing-code device-linking** flow.
 
 `google-services.json`, keystores and `local.properties` are git-ignored.
+
+### How devices register
+
+Devices link via a **pairing code** (no shared passwords, no Cloud Functions): the admin clicks
+*Add device* in the panel to mint a short-lived code, the device enters it under *Settings → Cloud
+sync → Link device* and consents, then claims itself under that owner (validated by Firestore
+rules). Full flow + diagram in [docs/firebase/FIRESTORE_SCHEMA.md](docs/firebase/FIRESTORE_SCHEMA.md).
 
 ---
 

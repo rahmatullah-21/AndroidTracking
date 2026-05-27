@@ -4,13 +4,20 @@ This is the contract shared by the **Android cloud-sync module** (writer) and th
 panel** (reader). Sync is **opt-in per device** and only runs when the device user enables it.
 
 ```
-devices/{deviceId}                         (document)
+pairingCodes/{code}                        (document, id = the short pairing code)
+  ownerUid: string                         # admin who generated the code
+  createdAt: timestamp
+  expiresAt: timestamp                      # short-lived (e.g. now + 15 min)
+
+devices/{deviceId}                         (document, deviceId = stable per-install UUID)
   deviceId: string
   label: string                            # e.g. "Samsung SM-G991B"
   model: string
   manufacturer: string
   appVersion: string
-  ownerUid: string                         # the admin/owner account that registered the device
+  ownerUid: string                         # owner account, copied from the pairing code at claim time
+  claimedByUid: string                     # the device's anonymous-auth uid (write permission key)
+  pairingCode: string                      # the code used to claim (validated by rules on create)
   monitoringConsent: boolean               # the device user acknowledged monitoring
   lastSeen: timestamp
   summary: {
@@ -52,27 +59,35 @@ devices/{deviceId}/security/latest         (document)
   updatedAt: timestamp
 ```
 
-## Security rules (starting point)
+## Security rules
 
-Devices may only write their own document/subtree; admins may read devices they own.
+The full, deployable rules live in [`../../firestore.rules`](../../firestore.rules)
+(`firebase deploy --only firestore:rules`). They implement the **pairing-code** model below — a
+device can only claim itself under an owner if it presents a valid, unexpired pairing code, and
+thereafter may only touch its own subtree. Don't loosen them: they are what keeps monitoring scoped
+to devices the owner actually controls.
+
+## Device registration (pairing-code flow)
 
 ```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{db}/documents {
-    match /devices/{deviceId} {
-      allow read:  if request.auth != null && resource.data.ownerUid == request.auth.uid;
-      allow write: if request.auth != null && request.resource.data.ownerUid == request.auth.uid;
-      match /{sub=**} {
-        allow read, write: if request.auth != null
-          && get(/databases/$(db)/documents/devices/$(deviceId)).data.ownerUid == request.auth.uid;
-      }
-    }
-  }
-}
+Admin panel (owner signed in)            Device (Device Insight Pro)
+─────────────────────────────           ───────────────────────────
+1. "Add device" →
+   create pairingCodes/{CODE}
+   { ownerUid, expiresAt }
+   show CODE to the admin   ───────────▶ 2. Settings → Cloud sync → "Link device"
+                                            enter CODE, confirm consent
+                                         3. sign in anonymously  → uid
+                                         4. read pairingCodes/{CODE} → ownerUid
+                                         5. create devices/{deviceId}
+                                            { ownerUid, claimedByUid: uid, pairingCode: CODE, … }
+                                            (rules validate the code server-side)
+6. panel lists devices       ◀──────────  7. CloudSyncWorker keeps the doc + subcollections fresh
+   where ownerUid == myUid                    (allowed because claimedByUid == uid)
 ```
 
-> Both the Android device and the admin panel authenticate as the **same owner account** (or the
-> device uses a credential the owner provisioned). The admin only ever sees devices whose
-> `ownerUid` matches their UID. Don't loosen these rules — they are what keeps monitoring scoped to
-> devices the owner actually controls.
+- The owner **never shares their password**; the device authenticates anonymously.
+- The pairing code is a short-lived secret (≈15 min). A leaked code can only register a device under
+  that owner (which the owner can then see and delete) — it grants no read access to existing data.
+- Enable **Anonymous** auth (for devices) and **Email/Password** auth (for admins) in the Firebase
+  console.

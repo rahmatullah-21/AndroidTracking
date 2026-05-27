@@ -1,17 +1,19 @@
 /*
- * DROP-IN REFERENCE — not compiled by default.
+ * DROP-IN REFERENCE — not compiled by default. Pairing-code model (see ../FIRESTORE_SCHEMA.md).
  *
  * To enable multi-device sync to the React admin panel:
  *   1. Add google-services.json to app/ and uncomment the google-services plugin + Firebase
- *      dependencies (see README "Firebase setup").
+ *      dependencies (firebase-auth, firebase-firestore) — see README "Firebase setup".
  *   2. Add: implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.9.0")
- *   3. Copy this file to app/src/main/java/com/deviceinsight/pro/data/repository/.
- *   4. Copy CloudSyncModule.kt and CloudSyncWorker.kt likewise, and REMOVE the NoOp
- *      `bindCloudSyncRepository` binding from RepositoryModule.kt.
- *   5. Authenticate the device (FirebaseAuth) as the owner account, then schedule CloudSyncWorker.
+ *   3. Enable Anonymous auth in the Firebase console.
+ *   4. Copy this file + DeviceLinkRepository.kt + CloudSyncModule.kt + CloudSyncWorker.kt into the
+ *      app, and REMOVE the NoOp `bindCloudSyncRepository` binding from RepositoryModule.kt.
+ *   5. Add a "Cloud sync" settings screen (see CloudSyncScreen.kt) where the user enters the pairing
+ *      code; then schedule CloudSyncWorker.
  *
- * It uploads only the on-device analytics the user already consented to, and only when cloud
- * sync is enabled in Settings.
+ * The device authenticates ANONYMOUSLY and writes only the already-consented on-device analytics.
+ * The device document is created at link time by DeviceLinkRepository; syncNow only refreshes it
+ * (merge), so it never changes ownerUid/claimedByUid.
  */
 package com.deviceinsight.pro.data.repository
 
@@ -27,6 +29,7 @@ import com.deviceinsight.pro.utils.DeviceIdentity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -46,27 +49,27 @@ class FirestoreCloudSyncRepository @Inject constructor(
     private val metricsRepository: DeviceMetricsRepository
 ) : CloudSyncRepository {
 
+    // Linked == signed in (anonymously) AND this device's doc has been claimed.
     override fun isCloudEnabled(): Boolean = auth.currentUser != null
 
     override suspend fun syncNow(): Result<Unit> = runCatching {
-        val uid = auth.currentUser?.uid ?: error("Not signed in")
+        auth.currentUser ?: error("Device not linked")
         if (!settingsRepository.observe().first().monitoringEnabled) return@runCatching
 
         val deviceRef = firestore.collection("devices").document(deviceIdentity.deviceId)
+        // The doc must already exist (created by DeviceLinkRepository at link time).
+        if (!deviceRef.get().await().exists()) error("Device not linked — claim a pairing code first")
 
         val screen = usageRepository.observeScreenTime(1).first()
-        val topApps = usageRepository.observeUsage(1).first().take(15)
         val notifCount = notificationRepository.observeTodayCount().first()
         val msgCount = messageRepository.observeTodayCount().first()
         val report = securityRepository.observeReport().first()
         val battery = metricsRepository.currentBattery()
 
+        // Merge-update: refreshes summary + lastSeen without touching ownerUid/claimedByUid.
         deviceRef.set(
             mapOf(
-                "deviceId" to deviceIdentity.deviceId,
                 "label" to deviceIdentity.label,
-                "ownerUid" to uid,
-                "monitoringConsent" to true,
                 "lastSeen" to FieldValue.serverTimestamp(),
                 "summary" to mapOf(
                     "screenTimeMsToday" to screen.totalScreenOnMs,
@@ -78,13 +81,13 @@ class FirestoreCloudSyncRepository @Inject constructor(
                     "batteryLevel" to battery.level,
                     "isCharging" to battery.isCharging
                 )
-            )
+            ),
+            SetOptions.merge()
         ).await()
 
         // Messages (last 100)
-        val messages = messageRepository.observeRecent().first().take(100)
         val msgCol = deviceRef.collection("messages")
-        messages.forEach { m ->
+        messageRepository.observeRecent().first().take(100).forEach { m ->
             msgCol.document(m.id.toString()).set(
                 mapOf(
                     "platform" to m.platform.name,

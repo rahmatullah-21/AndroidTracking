@@ -1,0 +1,72 @@
+rules_version = '2';
+
+// Device Insight Pro — Firestore security rules (pairing-code device linking, no Cloud Functions).
+//
+// Model:
+//   - Admin (owner) signs in with email/password and creates short-lived pairing codes.
+//   - A device signs in ANONYMOUSLY and claims itself by presenting a valid pairing code; it may
+//     only create a device document whose ownerUid matches that code's ownerUid.
+//   - Thereafter the device (its anonymous uid == claimedByUid) may update its own document and
+//     write its own subcollections. The owner may read/delete devices they own.
+//
+// Deploy: `firebase deploy --only firestore:rules`
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner(data) {
+      return request.auth != null && data.ownerUid == request.auth.uid;
+    }
+    function isClaimingDevice(data) {
+      return request.auth != null && data.claimedByUid == request.auth.uid;
+    }
+    function codeData(code) {
+      return get(/databases/$(database)/documents/pairingCodes/$(code)).data;
+    }
+
+    // ---- Pairing codes ----------------------------------------------------
+    match /pairingCodes/{code} {
+      // Owner creates a code for themselves.
+      allow create: if request.auth != null
+        && request.resource.data.ownerUid == request.auth.uid;
+      // A device can read ONE code by its exact id (no listing/enumeration).
+      allow get:  if request.auth != null;
+      allow list: if false;
+      // Only the owner can revoke their codes.
+      allow update, delete: if request.auth != null
+        && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // ---- Devices ----------------------------------------------------------
+    match /devices/{deviceId} {
+      allow read: if request.auth != null
+        && (resource.data.ownerUid == request.auth.uid
+            || resource.data.claimedByUid == request.auth.uid);
+
+      // First-time claim: an authenticated (anonymous) device creates its own document, but only
+      // with an ownerUid backed by a valid, unexpired pairing code it actually possesses.
+      allow create: if request.auth != null
+        && request.resource.data.claimedByUid == request.auth.uid
+        && exists(/databases/$(database)/documents/pairingCodes/$(request.resource.data.pairingCode))
+        && codeData(request.resource.data.pairingCode).ownerUid == request.resource.data.ownerUid
+        && codeData(request.resource.data.pairingCode).expiresAt > request.time;
+
+      // Ongoing updates by the same device; ownership cannot be changed.
+      allow update: if isClaimingDevice(resource.data)
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.claimedByUid == resource.data.claimedByUid;
+
+      // Owner can unlink/remove a device they own.
+      allow delete: if isOwner(resource.data);
+
+      // Subcollections (usage, messages, events, security): the device writes; owner + device read.
+      match /{sub=**} {
+        allow read: if request.auth != null
+          && (get(/databases/$(database)/documents/devices/$(deviceId)).data.ownerUid == request.auth.uid
+              || get(/databases/$(database)/documents/devices/$(deviceId)).data.claimedByUid == request.auth.uid);
+        allow write: if request.auth != null
+          && get(/databases/$(database)/documents/devices/$(deviceId)).data.claimedByUid == request.auth.uid;
+      }
+    }
+  }
+}
