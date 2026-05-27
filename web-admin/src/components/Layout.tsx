@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
+import ConfirmDialog from './ConfirmDialog'
 import { useAuth } from '../context/AuthContext'
 import { USE_MOCK } from '../lib/firebase'
 
@@ -7,6 +9,7 @@ const linkBase =
 
 export default function Layout() {
   const { user, signOutUser } = useAuth()
+  const [confirmSignOut, setConfirmSignOut] = useState(false)
 
   return (
     <div className="flex min-h-screen">
@@ -27,11 +30,25 @@ export default function Layout() {
         </nav>
         <div className="mt-4 border-t border-slate-700 pt-4 text-xs text-slate-400">
           <div className="truncate">{user?.email}</div>
-          <button onClick={signOutUser} className="mt-2 text-slate-300 hover:text-white">
+          <button onClick={() => setConfirmSignOut(true)} className="mt-2 text-slate-300 hover:text-white">
             Sign out
           </button>
         </div>
       </aside>
+
+      {confirmSignOut && (
+        <ConfirmDialog
+          title="Sign out?"
+          message="You'll need to sign in again to view your devices."
+          confirmLabel="Sign out"
+          danger
+          onCancel={() => setConfirmSignOut(false)}
+          onConfirm={() => {
+            setConfirmSignOut(false)
+            void signOutUser()
+          }}
+        />
+      )}
 
       <main className="flex-1 overflow-y-auto">
         {USE_MOCK && (
