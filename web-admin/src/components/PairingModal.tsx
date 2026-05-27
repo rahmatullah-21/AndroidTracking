@@ -1,17 +1,32 @@
 import { useEffect, useState } from 'react'
 import Spinner from './Spinner'
-import { createPairingCode, type PairingCode } from '../lib/pairing'
+import { createPairingCode, deletePairingCode, type PairingCode } from '../lib/pairing'
 
 /** Generates a pairing code for [ownerUid] and shows it for the device user to enter. */
 export default function PairingModal({ ownerUid, onClose }: { ownerUid: string; onClose: () => void }) {
   const [code, setCode] = useState<PairingCode | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(true)
   const [copied, setCopied] = useState(false)
 
+  // Generate a fresh code; if `previous` is given, revoke it first.
+  async function generate(previous?: PairingCode | null) {
+    setBusy(true)
+    setError(null)
+    setCopied(false)
+    try {
+      if (previous) await deletePairingCode(previous.code).catch(() => {})
+      setCode(await createPairingCode(ownerUid))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to create code')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   useEffect(() => {
-    createPairingCode(ownerUid)
-      .then(setCode)
-      .catch((e) => setError(e instanceof Error ? e.message : 'Failed to create code'))
+    void generate()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ownerUid])
 
   return (
@@ -42,7 +57,8 @@ export default function PairingModal({ ownerUid, onClose }: { ownerUid: string; 
                   setCopied(true)
                   setTimeout(() => setCopied(false), 1500)
                 }}
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50"
+                disabled={busy}
+                className="rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
               >
                 {copied ? 'Copied' : 'Copy'}
               </button>
@@ -54,12 +70,21 @@ export default function PairingModal({ ownerUid, onClose }: { ownerUid: string; 
           </>
         )}
 
-        <button
-          onClick={onClose}
-          className="mt-6 w-full rounded-lg bg-slate-900 py-2 text-sm font-semibold text-white hover:bg-slate-700"
-        >
-          Done
-        </button>
+        <div className="mt-6 flex gap-3">
+          <button
+            onClick={() => generate(code)}
+            disabled={busy}
+            className="flex-1 rounded-lg border border-slate-300 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          >
+            {busy ? 'Regenerating…' : '↻ Regenerate'}
+          </button>
+          <button
+            onClick={onClose}
+            className="flex-1 rounded-lg bg-slate-900 py-2 text-sm font-semibold text-white hover:bg-slate-700"
+          >
+            Done
+          </button>
+        </div>
       </div>
     </div>
   )

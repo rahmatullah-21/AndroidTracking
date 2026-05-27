@@ -1,4 +1,4 @@
-import { Timestamp, doc, serverTimestamp, setDoc } from 'firebase/firestore'
+import { Timestamp, deleteDoc, doc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { USE_MOCK, getDb } from './firebase'
 
 // Unambiguous alphabet (no 0/O/1/I) for codes the user has to type on a phone.
@@ -34,4 +34,10 @@ export async function createPairingCode(ownerUid: string): Promise<PairingCode> 
     expiresAt: Timestamp.fromDate(expiresAt),
   })
   return { code, expiresAt }
+}
+
+/** Revokes a previously generated pairing code. No-op in demo mode. */
+export async function deletePairingCode(code: string): Promise<void> {
+  if (USE_MOCK) return
+  await deleteDoc(doc(getDb(), 'pairingCodes', code))
 }
