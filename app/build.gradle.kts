@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    // google-services is auto-applied below only when a valid google-services.json is present.
 }
 
 // Auto-apply the google-services plugin only when a VALID app config is present (a real
@@ -107,9 +108,11 @@ dependencies {
     // Java 8+ API desugaring
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
-    // Firebase cloud sync (optional at runtime — initializes only when google-services.json is added)
+    // Firebase cloud sync + analytics (optional at runtime — initializes only when
+    // google-services.json is added). Single BoM from the version catalog governs versions.
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
+    implementation(libs.firebase.analytics)
     implementation(libs.kotlinx.coroutines.play.services)
 }
