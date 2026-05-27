@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- Local monitoring data stays on-device by default; exclude the DB from cloud backup. -->
+    <exclude domain="database" path="device_insight.db" />
+    <exclude domain="sharedpref" path="secure_prefs.xml" />
+</full-backup-content>
