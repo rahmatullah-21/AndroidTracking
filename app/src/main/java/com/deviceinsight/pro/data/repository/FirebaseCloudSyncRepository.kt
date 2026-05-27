@@ -49,7 +49,8 @@ class FirebaseCloudSyncRepository @Inject constructor(
     override suspend fun syncNow(): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             if (!isCloudEnabled()) return@runCatching
-            if (!settingsRepository.observe().first().monitoringEnabled) return@runCatching
+            // Note: cloud sync runs once the device is linked + consented; it is not gated on the
+            // separate "Live monitoring" foreground-service toggle (that only drives the timeline).
 
             val deviceRef = Firebase.firestore.collection("devices").document(deviceIdentity.deviceId)
             if (!deviceRef.get().await().exists()) return@runCatching // not linked yet

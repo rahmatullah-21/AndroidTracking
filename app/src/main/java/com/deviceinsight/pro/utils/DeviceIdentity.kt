@@ -20,6 +20,8 @@ class DeviceIdentity @Inject constructor(
         }
 
     val label: String = "${Build.MANUFACTURER} ${Build.MODEL}"
+    val manufacturer: String = Build.MANUFACTURER ?: "Unknown"
+    val model: String = Build.MODEL ?: "Unknown"
 
     private companion object {
         const val KEY_ID = "device_id"

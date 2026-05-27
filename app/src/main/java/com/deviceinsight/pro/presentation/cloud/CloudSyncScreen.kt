@@ -89,6 +89,13 @@ fun CloudSyncScreen(
                                 "monitored while linked.",
                             style = MaterialTheme.typography.bodyMedium
                         )
+                        Button(
+                            onClick = viewModel::syncNow,
+                            enabled = !state.busy,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(if (state.busy) "Syncing…" else "Sync now")
+                        }
                         OutlinedButton(onClick = viewModel::unlink, enabled = !state.busy) {
                             Text("Unlink this device")
                         }

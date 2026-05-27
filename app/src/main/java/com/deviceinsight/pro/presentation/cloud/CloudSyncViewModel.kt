@@ -54,6 +54,17 @@ class CloudSyncViewModel @Inject constructor(
         }
     }
 
+    fun syncNow() {
+        viewModelScope.launch {
+            _state.value = snapshot(busy = true)
+            val result = cloudSync.syncNow()
+            _state.value = snapshot(
+                message = if (result.isSuccess) "Synced. Data should appear in the admin panel shortly." else null,
+                error = result.exceptionOrNull()?.message
+            )
+        }
+    }
+
     fun unlink() {
         viewModelScope.launch {
             _state.value = snapshot(busy = true)

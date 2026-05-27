@@ -17,18 +17,52 @@ export async function deleteDevice(deviceId: string): Promise<void> {
   await deleteDoc(doc(getDb(), 'devices', deviceId))
 }
 
+// Firestore stores lastSeen as a Timestamp and writes summary lazily; normalize to the app's
+// shape (numeric lastSeen, fully-populated summary) so the UI never shows undefined/garbage.
+function toMillis(v: any): number | undefined {
+  if (v == null) return undefined
+  if (typeof v === 'number') return v
+  if (typeof v.toMillis === 'function') return v.toMillis()
+  if (typeof v.seconds === 'number') return v.seconds * 1000
+  return undefined
+}
+
+function normalizeDevice(id: string, raw: any): Device {
+  const s = raw?.summary ?? {}
+  return {
+    deviceId: id,
+    label: raw?.label ?? id,
+    model: raw?.model ?? '',
+    manufacturer: raw?.manufacturer ?? '',
+    appVersion: raw?.appVersion,
+    ownerUid: raw?.ownerUid,
+    monitoringConsent: raw?.monitoringConsent,
+    lastSeen: toMillis(raw?.lastSeen),
+    summary: {
+      screenTimeMsToday: s.screenTimeMsToday ?? 0,
+      unlocksToday: s.unlocksToday ?? 0,
+      notificationsToday: s.notificationsToday ?? 0,
+      messagesToday: s.messagesToday ?? 0,
+      securityScore: s.securityScore ?? 0,
+      focusScore: s.focusScore ?? 0,
+      batteryLevel: s.batteryLevel ?? 0,
+      isCharging: s.isCharging ?? false,
+    },
+  }
+}
+
 export async function listDevices(ownerUid: string): Promise<Device[]> {
   if (USE_MOCK) return mock.mockDevices
   const db = getDb()
   const snap = await getDocs(query(collection(db, 'devices'), where('ownerUid', '==', ownerUid)))
-  return snap.docs.map((d) => ({ deviceId: d.id, ...(d.data() as Omit<Device, 'deviceId'>) }))
+  return snap.docs.map((d) => normalizeDevice(d.id, d.data()))
 }
 
 export async function getDevice(deviceId: string): Promise<Device | null> {
   if (USE_MOCK) return mock.mockDevices.find((d) => d.deviceId === deviceId) ?? null
   const db = getDb()
   const snap = await getDoc(doc(db, 'devices', deviceId))
-  return snap.exists() ? ({ deviceId: snap.id, ...(snap.data() as Omit<Device, 'deviceId'>) }) : null
+  return snap.exists() ? normalizeDevice(snap.id, snap.data()) : null
 }
 
 export async function getMessages(deviceId: string): Promise<SocialMessage[]> {

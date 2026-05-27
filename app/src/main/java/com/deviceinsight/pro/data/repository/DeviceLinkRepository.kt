@@ -50,6 +50,8 @@ class DeviceLinkRepository @Inject constructor(
                 mapOf(
                     "deviceId" to deviceIdentity.deviceId,
                     "label" to deviceIdentity.label,
+                    "manufacturer" to deviceIdentity.manufacturer,
+                    "model" to deviceIdentity.model,
                     "ownerUid" to ownerUid,
                     "claimedByUid" to uid,
                     "pairingCode" to code,
